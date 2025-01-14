@@ -306,7 +306,15 @@ MiniNotify.make_notify = function(opts)
     if level_data.duration <= 0 then return end
 
     local id = MiniNotify.add(msg, level_name, level_data.hl_group)
-    vim.defer_fn(function() MiniNotify.remove(id) end, level_data.duration)
+    local function defer_fn()
+      -- Wait if in cmmand mode
+      if vim.api.nvim_get_mode().mode:sub(1, 1) == 'c' then
+        vim.defer_fn(defer_fn, 1000)
+      else
+        MiniNotify.remove(id)
+      end
+    end
+    vim.defer_fn(defer_fn, level_data.duration)
   end)
 end
 
